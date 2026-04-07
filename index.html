@@ -3,19 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#2a5298">
+    
+    <!-- PWA SETTINGS - Required for "Install App" option -->
+    <meta name="theme-color" content="#1e3c72">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Diary">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Professional Diary">
+    <meta name="description" content="Professional Diary - Appointments, Notes & Reminders">
+    
+    <!-- Icons for Home Screen -->
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect fill='%231e3c72' width='180' height='180' rx='36'/%3E%3Ctext x='90' y='115' font-size='80' text-anchor='middle' fill='white'%3E📅%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231e3c72' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E📅%3C/text%3E%3C/svg%3E">
+    
     <title>Professional Diary</title>
+    
+    <!-- PWA Manifest - This enables "Install App" in Chrome -->
+    <link rel="manifest" id="pwa-manifest">
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        html, body { height: 100%; overflow: hidden; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            min-height: 100vh; 
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             padding: 10px; 
-            overflow-x: hidden; 
+            padding-top: env(safe-area-inset-top, 10px);
+            padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
         .container { 
@@ -24,23 +43,30 @@
             background: white; 
             border-radius: 20px; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
-            overflow: hidden; 
+            overflow: hidden;
+            height: calc(100vh - 20px);
+            height: calc(100dvh - 20px);
+            display: flex;
+            flex-direction: column;
         }
         
         .header { 
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
             color: white; 
-            padding: 25px 20px; 
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
             text-align: center; 
-            position: relative; 
+            position: relative;
+            flex-shrink: 0;
         }
         
-        .header h1 { font-size: 24px; margin-bottom: 5px; }
-        .header p { font-size: 14px; opacity: 0.9; }
+        .header h1 { font-size: 22px; margin-bottom: 4px; }
+        .header p { font-size: 13px; opacity: 0.9; }
         
         .sync-status { 
             position: absolute; 
-            top: 10px; 
+            top: 10px;
+            top: max(10px, env(safe-area-inset-top));
             right: 15px; 
             font-size: 11px; 
             padding: 5px 12px; 
@@ -57,22 +83,38 @@
         
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         
+        /* Install Banner */
+        .install-banner {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            display: none;
+            flex-shrink: 0;
+        }
+        .install-banner.show { display: block; }
+        .install-banner h3 { font-size: 16px; margin-bottom: 5px; }
+        .install-banner p { font-size: 13px; opacity: 0.9; }
+        .install-banner:active { opacity: 0.9; }
+        
         .tabs { 
             display: flex; 
             background: #f5f5f5; 
             border-bottom: 2px solid #e0e0e0; 
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            flex-shrink: 0;
         }
         
         .tab { 
             flex: 1; 
-            min-width: 80px; 
-            padding: 15px 10px; 
+            min-width: 75px; 
+            padding: 14px 8px; 
             text-align: center; 
             background: none; 
             border: none; 
-            font-size: 13px; 
+            font-size: 12px; 
             font-weight: 600; 
             color: #666; 
             cursor: pointer; 
@@ -84,8 +126,7 @@
         
         .content { 
             padding: 20px; 
-            min-height: 450px; 
-            max-height: calc(100vh - 200px); 
+            flex: 1;
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
         }
@@ -95,7 +136,7 @@
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; }
         
         label { 
             display: block; 
@@ -115,6 +156,7 @@
             font-family: inherit;
             -webkit-appearance: none;
             appearance: none;
+            background: white;
         }
         input:focus, textarea:focus, select:focus { 
             outline: none; 
@@ -122,7 +164,7 @@
             box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1); 
         }
         
-        textarea { resize: vertical; min-height: 120px; }
+        textarea { resize: vertical; min-height: 100px; }
         
         select {
             background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 15px center;
@@ -131,7 +173,7 @@
         
         .btn { 
             width: 100%; 
-            padding: 16px; 
+            padding: 15px; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             color: white; 
             border: none; 
@@ -150,14 +192,17 @@
         .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .btn-danger { background: linear-gradient(135deg, #f5576c 0%, #ff6b6b 100%); }
         .btn-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .btn-email { background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%); }
+        .btn-test { background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); }
+        .btn-install { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); }
         
         .appointment-card { 
             background: #f8f9fa; 
             border-left: 4px solid #2a5298; 
-            padding: 18px; 
-            margin-bottom: 15px; 
+            padding: 16px; 
+            margin-bottom: 12px; 
             border-radius: 12px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         .appointment-card.urgent { border-left-color: #f5576c; background: #fff5f5; }
         
@@ -165,27 +210,27 @@
             display: flex; 
             justify-content: space-between; 
             align-items: flex-start; 
-            margin-bottom: 12px; 
+            margin-bottom: 10px; 
             gap: 10px; 
         }
-        .appointment-title { font-weight: 700; font-size: 17px; color: #1e3c72; flex: 1; }
+        .appointment-title { font-weight: 700; font-size: 16px; color: #1e3c72; flex: 1; }
         .appointment-date { 
-            font-size: 11px; 
+            font-size: 10px; 
             color: #666; 
             background: white; 
-            padding: 6px 12px; 
+            padding: 5px 10px; 
             border-radius: 8px; 
             white-space: nowrap;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .appointment-time { font-size: 15px; color: #2a5298; font-weight: 600; margin-bottom: 10px; }
-        .appointment-desc { font-size: 14px; color: #555; line-height: 1.6; }
+        .appointment-time { font-size: 14px; color: #2a5298; font-weight: 600; margin-bottom: 8px; }
+        .appointment-desc { font-size: 13px; color: #555; line-height: 1.5; }
         
-        .appointment-actions { margin-top: 15px; display: flex; gap: 10px; }
+        .appointment-actions { margin-top: 12px; display: flex; gap: 10px; }
         
         .btn-small { 
-            padding: 10px 18px; 
-            font-size: 13px; 
+            padding: 10px 16px; 
+            font-size: 12px; 
             border-radius: 8px; 
             border: none; 
             cursor: pointer; 
@@ -201,8 +246,8 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 20px; 
-            padding: 15px; 
+            margin-bottom: 15px; 
+            padding: 12px; 
             background: #f8f9fa; 
             border-radius: 12px; 
         }
@@ -210,30 +255,30 @@
             background: #2a5298; 
             color: white; 
             border: none; 
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 10px; 
             cursor: pointer; 
             font-weight: 600;
-            font-size: 18px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .calendar-nav:active { transform: scale(0.95); }
-        .calendar-month { font-size: 18px; font-weight: 700; color: #1e3c72; }
+        .calendar-month { font-size: 17px; font-weight: 700; color: #1e3c72; }
         
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 6px; 
-            margin-bottom: 20px; 
+            gap: 4px; 
+            margin-bottom: 15px; 
         }
         .calendar-day-header { 
             text-align: center; 
             font-weight: 700; 
-            padding: 10px 5px; 
-            font-size: 12px; 
+            padding: 8px 4px; 
+            font-size: 11px; 
             color: #666; 
         }
         .calendar-day { 
@@ -242,7 +287,7 @@
             align-items: center; 
             justify-content: center; 
             border-radius: 10px; 
-            font-size: 14px; 
+            font-size: 13px; 
             cursor: pointer; 
             transition: all 0.2s; 
             position: relative;
@@ -254,7 +299,7 @@
         .calendar-day.other-month { color: #ccc; }
         .event-dot { 
             position: absolute; 
-            bottom: 4px; 
+            bottom: 3px; 
             width: 5px; 
             height: 5px; 
             background: #f5576c; 
@@ -264,32 +309,32 @@
         .daily-note { 
             background: #fff9e6; 
             border-left: 4px solid #ffd700; 
-            padding: 18px; 
+            padding: 15px; 
             border-radius: 10px; 
-            margin-top: 20px; 
+            margin-top: 15px; 
         }
-        .daily-note-header { font-weight: 700; color: #996600; margin-bottom: 12px; font-size: 15px; }
-        .daily-note-content { font-size: 14px; color: #664400; line-height: 1.7; white-space: pre-wrap; }
+        .daily-note-header { font-weight: 700; color: #996600; margin-bottom: 10px; font-size: 14px; }
+        .daily-note-content { font-size: 13px; color: #664400; line-height: 1.6; white-space: pre-wrap; }
         
         .notification-badge { 
             background: #f5576c; 
             color: white; 
-            padding: 3px 8px; 
+            padding: 2px 7px; 
             border-radius: 10px; 
-            font-size: 11px; 
-            margin-left: 8px; 
+            font-size: 10px; 
+            margin-left: 5px; 
             font-weight: 700; 
         }
         
-        .empty-state { text-align: center; padding: 50px 20px; color: #999; }
-        .empty-state-icon { font-size: 56px; margin-bottom: 15px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .empty-state-icon { font-size: 50px; margin-bottom: 12px; }
         
         .info-box { 
-            padding: 15px; 
+            padding: 14px; 
             border-radius: 10px; 
-            margin-top: 15px; 
+            margin-top: 12px; 
             font-size: 13px; 
-            line-height: 1.6; 
+            line-height: 1.5; 
         }
         .info-box.success { background: #e8f5e9; border-left: 4px solid #4CAF50; color: #2E7D32; }
         .info-box.warning { background: #fff3e0; border-left: 4px solid #ff9800; color: #e65100; }
@@ -298,17 +343,17 @@
         
         .settings-card { 
             background: #f8f9fa; 
-            padding: 18px; 
+            padding: 15px; 
             border-radius: 12px; 
-            margin-bottom: 15px; 
+            margin-bottom: 12px; 
         }
-        .settings-label { font-weight: 600; color: #1e3c72; margin-bottom: 5px; font-size: 13px; }
-        .settings-value { color: #555; font-size: 15px; }
+        .settings-label { font-weight: 600; color: #1e3c72; margin-bottom: 4px; font-size: 12px; }
+        .settings-value { color: #555; font-size: 14px; }
         
-        .loading { display: flex; justify-content: center; align-items: center; padding: 50px; }
+        .loading { display: flex; justify-content: center; align-items: center; padding: 40px; }
         .spinner { 
-            width: 45px; 
-            height: 45px; 
+            width: 40px; 
+            height: 40px; 
             border: 4px solid #f3f3f3; 
             border-top: 4px solid #2a5298; 
             border-radius: 50%; 
@@ -319,18 +364,18 @@
         .debug-panel { 
             background: #1a1a2e; 
             color: #0f0; 
-            padding: 15px; 
+            padding: 12px; 
             border-radius: 10px; 
-            margin-top: 20px; 
+            margin-top: 15px; 
             font-family: 'Courier New', monospace; 
-            font-size: 11px; 
-            max-height: 200px; 
+            font-size: 10px; 
+            max-height: 150px; 
             overflow-y: auto; 
             display: none; 
         }
         .debug-panel.show { display: block; }
-        .debug-panel h4 { color: #fff; margin-bottom: 10px; font-family: Arial, sans-serif; }
-        .debug-line { margin: 4px 0; padding: 4px 6px; border-radius: 4px; }
+        .debug-panel h4 { color: #fff; margin-bottom: 8px; font-family: Arial, sans-serif; font-size: 12px; }
+        .debug-line { margin: 3px 0; padding: 3px 5px; border-radius: 3px; }
         .debug-line.error { background: rgba(244, 67, 54, 0.3); color: #ff6b6b; }
         .debug-line.success { background: rgba(76, 175, 80, 0.3); color: #69f0ae; }
         .debug-line.info { color: #64b5f6; }
@@ -338,16 +383,49 @@
         .btn-row { display: flex; gap: 10px; margin-top: 10px; }
         .btn-row .btn { flex: 1; margin-top: 0; }
         
-        @media (max-width: 400px) { 
-            .header h1 { font-size: 20px; } 
-            .calendar-day { font-size: 12px; } 
-            .tab { font-size: 11px; padding: 12px 8px; }
-            .btn { padding: 14px; font-size: 15px; }
+        /* Install Instructions */
+        .install-guide {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid #4CAF50;
+        }
+        .install-guide h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .install-guide ol {
+            padding-left: 20px;
+            line-height: 2;
+        }
+        .install-guide li {
+            color: #333;
+        }
+        
+        @media (max-width: 380px) { 
+            .header h1 { font-size: 18px; } 
+            .calendar-day { font-size: 11px; } 
+            .tab { font-size: 10px; padding: 12px 6px; min-width: 65px; }
+            .btn { padding: 13px; font-size: 14px; }
+            .content { padding: 15px; }
+        }
+        
+        /* Hide install banner when running as standalone app */
+        @media (display-mode: standalone) {
+            .install-banner { display: none !important; }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Install Banner - Shows when app can be installed -->
+        <div class="install-banner" id="installBanner" onclick="handleInstallClick()">
+            <h3>📱 Install this App!</h3>
+            <p>Tap here to add to your home screen</p>
+        </div>
+        
         <div class="header">
             <span class="sync-status" id="syncStatus" onclick="toggleDebug()">● Loading</span>
             <h1>📅 Professional Diary</h1>
@@ -358,7 +436,7 @@
             <button class="tab active" onclick="switchTab('calendar', this)">📅 Calendar</button>
             <button class="tab" onclick="switchTab('appointments', this)">➕ Add<span class="notification-badge" id="appointmentBadge" style="display:none;">0</span></button>
             <button class="tab" onclick="switchTab('notes', this)">📝 Notes</button>
-            <button class="tab" onclick="switchTab('settings', this)">⚙️ Settings</button>
+            <button class="tab" onclick="switchTab('settings', this)">⚙️</button>
         </div>
 
         <div class="content">
@@ -371,18 +449,18 @@
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
                 <div id="selectedDateInfo" style="display:none;">
-                    <h3 style="margin-bottom: 15px; color: #1e3c72;">📌 Events for <span id="selectedDateDisplay"></span></h3>
+                    <h3 style="margin-bottom: 12px; color: #1e3c72; font-size: 15px;">📌 <span id="selectedDateDisplay"></span></h3>
                     <div id="selectedDateEvents"></div>
                 </div>
             </div>
 
             <!-- ADD APPOINTMENT TAB -->
             <div id="appointments" class="tab-content">
-                <h2 style="margin-bottom: 20px; color: #1e3c72;" id="formTitle">➕ Add New Appointment</h2>
+                <h2 style="margin-bottom: 18px; color: #1e3c72; font-size: 18px;" id="formTitle">➕ Add Appointment</h2>
                 <form id="appointmentForm">
                     <input type="hidden" id="editingId" value="">
                     <div class="form-group">
-                        <label for="eventTitle">Event Title *</label>
+                        <label for="eventTitle">Title *</label>
                         <input type="text" id="eventTitle" placeholder="e.g., Doctor's Appointment" required autocomplete="off">
                     </div>
                     <div class="form-group">
@@ -394,8 +472,8 @@
                         <input type="time" id="eventTime" required>
                     </div>
                     <div class="form-group">
-                        <label for="eventDescription">Description</label>
-                        <textarea id="eventDescription" placeholder="Add any additional details..."></textarea>
+                        <label for="eventDescription">Notes</label>
+                        <textarea id="eventDescription" placeholder="Additional details..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="eventPriority">Priority</label>
@@ -405,58 +483,75 @@
                         </select>
                     </div>
                     <div class="info-box success" id="emailNotice">
-                        ✅ <strong>Email notifications enabled!</strong><br>
-                        You'll receive instant confirmation + reminders at 24hr and 12hr before.
+                        ✅ <strong>Email notifications ON</strong><br>
+                        Instant + 24hr + 12hr reminders
                     </div>
                     <button type="submit" class="btn" id="submitBtn">✅ Add Appointment</button>
-                    <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;" onclick="cancelEdit()">✖ Cancel Edit</button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;" onclick="cancelEdit()">✖ Cancel</button>
                 </form>
                 
-                <div style="margin-top: 35px;">
-                    <h3 style="margin-bottom: 15px; color: #1e3c72;">📋 Upcoming Appointments</h3>
+                <div style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 12px; color: #1e3c72; font-size: 15px;">📋 Upcoming</h3>
                     <div id="upcomingAppointments"><div class="loading"><div class="spinner"></div></div></div>
                 </div>
             </div>
 
             <!-- NOTES TAB -->
             <div id="notes" class="tab-content">
-                <h2 style="margin-bottom: 20px; color: #1e3c72;">📝 Daily Notes</h2>
+                <h2 style="margin-bottom: 18px; color: #1e3c72; font-size: 18px;">📝 Notes</h2>
                 <div class="form-group">
-                    <label for="noteDate">Select Date</label>
+                    <label for="noteDate">Date</label>
                     <input type="date" id="noteDate">
                 </div>
                 <div class="form-group">
-                    <label for="noteContent">Your Note</label>
-                    <textarea id="noteContent" placeholder="Write your notes for this day..." rows="6"></textarea>
+                    <label for="noteContent">Note</label>
+                    <textarea id="noteContent" placeholder="Write your notes..." rows="5"></textarea>
                 </div>
                 <div class="btn-row">
-                    <button onclick="saveNote()" class="btn btn-success">💾 Save Note</button>
+                    <button onclick="saveNote()" class="btn btn-success">💾 Save</button>
                     <button onclick="loadNote()" class="btn">📂 Load</button>
                 </div>
-                <div id="savedNotes" style="margin-top: 30px;"></div>
+                <div id="savedNotes" style="margin-top: 25px;"></div>
             </div>
 
             <!-- SETTINGS TAB -->
             <div id="settings" class="tab-content">
-                <h2 style="margin-bottom: 20px; color: #1e3c72;">⚙️ Settings</h2>
+                <h2 style="margin-bottom: 18px; color: #1e3c72; font-size: 18px;">⚙️ Settings</h2>
+                
+                <!-- Install App Section -->
+                <div id="installSection" class="install-guide" style="display:none;">
+                    <h3>📱 Install App</h3>
+                    <p style="margin-bottom: 15px; color: #666;">Add this diary to your home screen for quick access!</p>
+                    <button class="btn btn-install" id="installBtn" onclick="handleInstallClick()">📲 Install Now</button>
+                    
+                    <div id="manualInstallInstructions" style="margin-top: 15px; display: none;">
+                        <p style="font-weight: 600; color: #333; margin-bottom: 10px;">Manual Installation:</p>
+                        <ol style="padding-left: 20px; line-height: 1.8; color: #555;">
+                            <li>Tap the <strong>⋮ menu</strong> (3 dots) in Chrome</li>
+                            <li>Tap <strong>"Add to Home screen"</strong></li>
+                            <li>Tap <strong>"Add"</strong></li>
+                            <li>Find the 📅 icon on your home screen!</li>
+                        </ol>
+                    </div>
+                </div>
                 
                 <div class="settings-card">
-                    <div class="settings-label">📧 Email Address</div>
+                    <div class="settings-label">📧 Email</div>
                     <div class="settings-value">sat060355@gmail.com</div>
                 </div>
                 
                 <div class="settings-card">
-                    <div class="settings-label">📱 Mobile Number</div>
+                    <div class="settings-label">📱 Phone</div>
                     <div class="settings-value">07771360613</div>
                 </div>
                 
                 <div class="settings-card">
-                    <div class="settings-label">⏰ Email Reminders</div>
-                    <div class="settings-value">Instant + 24hr + 12hr before</div>
+                    <div class="settings-label">⏰ Reminders</div>
+                    <div class="settings-value">Instant + 24hr + 12hr</div>
                 </div>
                 
                 <div class="settings-card">
-                    <div class="settings-label">☁️ Cloud Status</div>
+                    <div class="settings-label">☁️ Status</div>
                     <div class="settings-value" id="cloudStatus">Checking...</div>
                 </div>
                 
@@ -470,14 +565,14 @@
                 </div>
                 
                 <button onclick="syncNow()" class="btn btn-success">🔄 Sync Now</button>
-                <button onclick="testConnection()" class="btn" style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);">🔌 Test Connection</button>
-                <button onclick="sendTestEmail()" class="btn" style="background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);">📧 Send Test Email</button>
-                <button onclick="exportData()" class="btn">📥 Export Data</button>
-                <button onclick="importData()" class="btn btn-secondary">📤 Import Data</button>
-                <button onclick="clearAllData()" class="btn btn-danger">🗑️ Clear All Data</button>
+                <button onclick="testConnection()" class="btn btn-test">🔌 Test Connection</button>
+                <button onclick="sendTestEmail()" class="btn btn-email">📧 Test Email</button>
+                <button onclick="exportData()" class="btn">📥 Export</button>
+                <button onclick="importData()" class="btn btn-secondary">📤 Import</button>
+                <button onclick="clearAllData()" class="btn btn-danger">🗑️ Clear All</button>
                 
                 <div class="debug-panel" id="debugPanel">
-                    <h4>🔧 Debug Log (tap sync status to toggle)</h4>
+                    <h4>🔧 Debug Log</h4>
                     <div id="debugLog"></div>
                 </div>
             </div>
@@ -486,10 +581,46 @@
 
     <script>
         // ============================================
-        // CONFIGURATION - UPDATE THIS URL!
+        // PWA MANIFEST - This enables "Install App" option
         // ============================================
         
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxVYbi7BGI4AAOeLPhLWzAnAMjHsEGUx5QlIVx1Mz00WaYD3tEPiPqd-vGIGcMFB4f7eQ/exec';
+        const manifestData = {
+            "name": "Professional Diary",
+            "short_name": "Diary",
+            "description": "Appointments, Notes & Reminders",
+            "start_url": ".",
+            "scope": ".",
+            "display": "standalone",
+            "background_color": "#1e3c72",
+            "theme_color": "#1e3c72",
+            "orientation": "portrait",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%231e3c72' width='192' height='192' rx='38'/%3E%3Ctext x='96' y='125' font-size='96' text-anchor='middle' fill='white'%3E📅%3C/text%3E%3C/svg%3E",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml",
+                    "purpose": "any maskable"
+                },
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%231e3c72' width='512' height='512' rx='102'/%3E%3Ctext x='256' y='335' font-size='256' text-anchor='middle' fill='white'%3E📅%3C/text%3E%3C/svg%3E",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml",
+                    "purpose": "any maskable"
+                }
+            ]
+        };
+        
+        // Create and apply manifest
+        const manifestString = JSON.stringify(manifestData);
+        const manifestBlob = new Blob([manifestString], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.getElementById('pwa-manifest').setAttribute('href', manifestURL);
+        
+        // ============================================
+        // CONFIGURATION - UPDATE THIS WITH YOUR URL!
+        // ============================================
+        
+        const API_URL = 'YOUR_DEPLOYMENT_URL_HERE';
         
         // ============================================
         // STATE
@@ -504,6 +635,95 @@
         let isSyncing = false;
         let debugMode = false;
         let debugLogs = [];
+        let deferredPrompt = null;
+
+        // ============================================
+        // PWA INSTALL HANDLING
+        // ============================================
+        
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            log('Install prompt available!', 'success');
+            showInstallOption();
+        });
+        
+        // Check if already installed
+        window.addEventListener('appinstalled', () => {
+            log('App installed!', 'success');
+            hideInstallOption();
+            deferredPrompt = null;
+        });
+        
+        function showInstallOption() {
+            document.getElementById('installBanner').classList.add('show');
+            document.getElementById('installSection').style.display = 'block';
+            document.getElementById('installBtn').style.display = 'block';
+            document.getElementById('manualInstallInstructions').style.display = 'none';
+        }
+        
+        function hideInstallOption() {
+            document.getElementById('installBanner').classList.remove('show');
+            document.getElementById('installSection').style.display = 'none';
+        }
+        
+        function handleInstallClick() {
+            if (deferredPrompt) {
+                // Use the native install prompt
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        log('User accepted install', 'success');
+                        hideInstallOption();
+                    } else {
+                        log('User dismissed install', 'info');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Show manual instructions
+                document.getElementById('manualInstallInstructions').style.display = 'block';
+                showManualInstallAlert();
+            }
+        }
+        
+        function showManualInstallAlert() {
+            const ua = navigator.userAgent;
+            let instructions = '';
+            
+            if (/iPhone|iPad|iPod/i.test(ua)) {
+                instructions = '📱 iPhone/iPad Installation:\n\n' +
+                    '1. Make sure you\'re using Safari (not Chrome)\n' +
+                    '2. Tap the Share button (⬆️) at the bottom\n' +
+                    '3. Scroll down and tap "Add to Home Screen"\n' +
+                    '4. Tap "Add" in the top right\n\n' +
+                    '✅ The app icon will appear on your home screen!';
+            } else if (/Android/i.test(ua)) {
+                instructions = '📱 Android Installation:\n\n' +
+                    '1. Tap the menu (⋮) in the top right corner\n' +
+                    '2. Look for "Install app" or "Add to Home screen"\n' +
+                    '3. Tap it and confirm\n\n' +
+                    '✅ The app icon will appear on your home screen!\n\n' +
+                    '💡 If you don\'t see the option:\n' +
+                    '• Make sure you\'re using Chrome browser\n' +
+                    '• Refresh the page and try again';
+            } else {
+                instructions = '💻 Desktop Installation:\n\n' +
+                    '1. Look for the install icon in the address bar\n' +
+                    '2. Or click the menu and select "Install app"\n' +
+                    '3. Confirm the installation\n\n' +
+                    '📱 For mobile, use Chrome (Android) or Safari (iPhone)';
+            }
+            
+            alert(instructions);
+        }
+        
+        function isStandalone() {
+            return (window.matchMedia('(display-mode: standalone)').matches) || 
+                   (window.navigator.standalone) || 
+                   document.referrer.includes('android-app://');
+        }
 
         // ============================================
         // INITIALIZATION
@@ -511,6 +731,23 @@
         
         document.addEventListener('DOMContentLoaded', async function() {
             log('App starting...', 'info');
+            
+            // Setup PWA
+            if (isStandalone()) {
+                log('Running as installed app', 'success');
+                hideInstallOption();
+            } else {
+                log('Running in browser', 'info');
+                // Show install option after delay
+                setTimeout(() => {
+                    if (!deferredPrompt && !isStandalone()) {
+                        document.getElementById('installSection').style.display = 'block';
+                        document.getElementById('installBtn').style.display = 'none';
+                        document.getElementById('manualInstallInstructions').style.display = 'block';
+                    }
+                }, 3000);
+            }
+            
             detectDevice();
             updateCurrentDate();
             setDefaultDates();
@@ -518,10 +755,8 @@
             renderAll();
             await syncWithCloud();
             
-            // Auto-sync every 5 minutes
             setInterval(syncWithCloud, 300000);
             
-            // Network listeners
             window.addEventListener('online', () => {
                 log('Back online', 'success');
                 detectDevice();
@@ -570,7 +805,8 @@
             else if (/Android/i.test(ua)) device = 'Android';
             
             const online = navigator.onLine ? 'Online' : 'Offline';
-            document.getElementById('deviceInfo').textContent = `${device} • ${online}`;
+            const installed = isStandalone() ? '• Installed ✓' : '• Browser';
+            document.getElementById('deviceInfo').textContent = `${device} • ${online} ${installed}`;
         }
 
         // ============================================
@@ -581,7 +817,7 @@
             try {
                 appointments = JSON.parse(localStorage.getItem('diary_appointments')) || [];
                 notes = JSON.parse(localStorage.getItem('diary_notes')) || {};
-                log(`Loaded ${appointments.length} appointments locally`, 'success');
+                log(`Loaded ${appointments.length} appointments`, 'success');
             } catch (e) {
                 appointments = [];
                 notes = {};
@@ -607,7 +843,6 @@
             
             const payload = JSON.stringify({ action, ...data });
             
-            // Try POST first
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -629,10 +864,10 @@
                     return result;
                 }
             } catch (e) {
-                log(`POST failed: ${e.message}`, 'error');
+                log(`API error: ${e.message}`, 'error');
             }
             
-            // Try GET fallback
+            // GET fallback
             try {
                 const url = `${API_URL}?action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`;
                 const response = await fetch(url, { method: 'GET', mode: 'cors' });
@@ -643,7 +878,7 @@
                     return result;
                 }
             } catch (e) {
-                log(`GET failed: ${e.message}`, 'error');
+                log(`GET error: ${e.message}`, 'error');
             }
             
             return null;
@@ -686,14 +921,14 @@
 
         async function syncNow() {
             await syncWithCloud();
-            alert(isOnline ? '✅ Synced successfully!' : '❌ Sync failed. Check connection.');
+            alert(isOnline ? '✅ Synced!' : '❌ Sync failed');
         }
 
         async function testConnection() {
             updateSyncStatus('syncing');
             const infoEl = document.getElementById('connectionInfo');
             infoEl.className = 'info-box info';
-            infoEl.innerHTML = '🔄 Testing connection...';
+            infoEl.innerHTML = '🔄 Testing...';
             
             const result = await apiRequest('ping');
             
@@ -701,12 +936,12 @@
                 isOnline = true;
                 updateSyncStatus('synced');
                 infoEl.className = 'info-box success';
-                infoEl.innerHTML = `✅ <strong>Connected!</strong><br>Server time: ${result.time}<br>Email: ${result.email}`;
+                infoEl.innerHTML = `✅ <strong>Connected!</strong>`;
             } else {
                 isOnline = false;
                 updateSyncStatus('error');
                 infoEl.className = 'info-box error';
-                infoEl.innerHTML = '❌ <strong>Connection failed!</strong><br>Check debug log for details.';
+                infoEl.innerHTML = '❌ <strong>Failed!</strong> Check debug log.';
             }
         }
 
@@ -718,13 +953,13 @@
             const result = await apiRequest('sendTestEmail');
             
             if (result && result.status === 'ok') {
-                alert('✅ Test email sent!\n\nCheck your inbox (and spam folder).');
+                alert('✅ Test email sent!\n\nCheck inbox (& spam).');
             } else {
-                alert('❌ Failed to send email.\n\n' + (result ? result.message : 'No response from server'));
+                alert('❌ Failed to send email');
             }
             
             btn.disabled = false;
-            btn.textContent = '📧 Send Test Email';
+            btn.textContent = '📧 Test Email';
         }
 
         function updateSyncStatus(status) {
@@ -735,10 +970,10 @@
             el.className = 'sync-status ' + status;
             
             const statusMap = {
-                synced: { text: '● Synced', cloud: 'Connected ✅', info: 'success', infoText: '✅ <strong>Connected to cloud!</strong><br>Emails: Instant + 24hr + 12hr reminders' },
-                syncing: { text: '● Syncing...', cloud: 'Syncing...', info: 'info', infoText: '🔄 Syncing with cloud...' },
-                offline: { text: '● Offline', cloud: 'Offline ⚠️', info: 'warning', infoText: '⚠️ <strong>Offline mode</strong><br>Data saved locally. Will sync when online.' },
-                error: { text: '● Error', cloud: 'Error ❌', info: 'error', infoText: '❌ <strong>Connection error</strong><br>Tap "Test Connection" for details.' }
+                synced: { text: '● Synced', cloud: 'Connected ✅', info: 'success', infoText: '✅ <strong>Connected!</strong> Emails active.' },
+                syncing: { text: '● Syncing', cloud: 'Syncing...', info: 'info', infoText: '🔄 Syncing...' },
+                offline: { text: '● Offline', cloud: 'Offline ⚠️', info: 'warning', infoText: '⚠️ <strong>Offline</strong> - Using local data.' },
+                error: { text: '● Error', cloud: 'Error ❌', info: 'error', infoText: '❌ <strong>Error</strong> - Check connection.' }
             };
             
             const s = statusMap[status] || statusMap.offline;
@@ -752,7 +987,7 @@
         // ============================================
         
         function updateCurrentDate() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', options);
         }
 
@@ -764,7 +999,7 @@
 
         function formatDateUK(dateStr) {
             const date = new Date(dateStr + 'T12:00:00');
-            return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+            return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
         }
 
         function escapeHtml(text) {
@@ -812,16 +1047,14 @@
             const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
             const today = new Date();
             
-            let html = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => 
+            let html = ['S','M','T','W','T','F','S'].map(d => 
                 `<div class="calendar-day-header">${d}</div>`
             ).join('');
             
-            // Previous month days
             for (let i = firstDay - 1; i >= 0; i--) {
                 html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
             }
             
-            // Current month days
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
@@ -835,7 +1068,6 @@
                 html += `<div class="${classes}" onclick="selectDate('${dateStr}')">${day}${(hasEvent || hasNote) ? '<div class="event-dot"></div>' : ''}</div>`;
             }
             
-            // Next month days
             const totalCells = firstDay + daysInMonth;
             const remaining = (7 - (totalCells % 7)) % 7;
             for (let i = 1; i <= remaining; i++) {
@@ -860,7 +1092,7 @@
             }
             
             if (!events.length && !note) {
-                html = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No events or notes</p></div>';
+                html = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No events</p></div>';
             }
             
             document.getElementById('selectedDateEvents').innerHTML = html;
@@ -890,7 +1122,6 @@
                 createdAt: new Date().toISOString()
             };
             
-            // Save locally first
             if (editId) {
                 const idx = appointments.findIndex(a => a.id === editId);
                 if (idx !== -1) appointments[idx] = apt;
@@ -900,15 +1131,13 @@
             appointments.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
             saveLocalData();
             
-            // Sync to cloud
             const action = editId ? 'updateAppointment' : 'addAppointment';
             const result = await apiRequest(action, { appointment: apt });
             
-            // Reset form
             this.reset();
             setDefaultDates();
             document.getElementById('editingId').value = '';
-            document.getElementById('formTitle').textContent = '➕ Add New Appointment';
+            document.getElementById('formTitle').textContent = '➕ Add Appointment';
             btn.textContent = '✅ Add Appointment';
             btn.disabled = false;
             document.getElementById('cancelBtn').style.display = 'none';
@@ -916,9 +1145,9 @@
             renderAll();
             
             if (result && result.status === 'ok') {
-                alert(`✅ Appointment ${editId ? 'updated' : 'added'}!\n\n📧 Confirmation email sent.\n⏰ Reminders: 24hr & 12hr before.`);
+                alert(`✅ ${editId ? 'Updated' : 'Added'}!\n\n📧 Email sent\n⏰ Reminders: 24hr & 12hr`);
             } else {
-                alert(`✅ Saved locally!\n\n⚠️ Cloud sync failed. Will retry later.`);
+                alert(`✅ Saved locally!\n\n⚠️ Will sync when online.`);
             }
         });
 
@@ -934,7 +1163,7 @@
                     ${apt.description ? `<div class="appointment-desc">${escapeHtml(apt.description)}</div>` : ''}
                     <div class="appointment-actions">
                         <button class="btn-small btn-edit" onclick="editAppointment('${apt.id}')">✏️ Edit</button>
-                        <button class="btn-small btn-delete" onclick="deleteAppointment('${apt.id}')">🗑️ Delete</button>
+                        <button class="btn-small btn-delete" onclick="deleteAppointment('${apt.id}')">🗑️</button>
                     </div>
                 </div>
             `;
@@ -963,7 +1192,7 @@
             document.getElementById('eventPriority').value = apt.priority;
             
             document.getElementById('formTitle').textContent = '✏️ Edit Appointment';
-            document.getElementById('submitBtn').textContent = '💾 Update Appointment';
+            document.getElementById('submitBtn').textContent = '💾 Update';
             document.getElementById('cancelBtn').style.display = 'block';
             
             switchTab('appointments', document.querySelectorAll('.tab')[1]);
@@ -974,13 +1203,13 @@
             document.getElementById('editingId').value = '';
             document.getElementById('appointmentForm').reset();
             setDefaultDates();
-            document.getElementById('formTitle').textContent = '➕ Add New Appointment';
+            document.getElementById('formTitle').textContent = '➕ Add Appointment';
             document.getElementById('submitBtn').textContent = '✅ Add Appointment';
             document.getElementById('cancelBtn').style.display = 'none';
         }
 
         async function deleteAppointment(id) {
-            if (!confirm('🗑️ Delete this appointment?\n\nYou will receive a cancellation email.')) return;
+            if (!confirm('🗑️ Delete this appointment?')) return;
             
             appointments = appointments.filter(a => a.id !== id);
             saveLocalData();
@@ -1007,29 +1236,20 @@
             const date = document.getElementById('noteDate').value;
             const content = document.getElementById('noteContent').value.trim();
             
-            if (!date) { alert('Please select a date'); return; }
+            if (!date) { alert('Select a date'); return; }
             
-            if (content) {
-                notes[date] = content;
-            } else {
-                delete notes[date];
-            }
+            if (content) { notes[date] = content; } else { delete notes[date]; }
             saveLocalData();
             
             const result = await apiRequest('saveNote', { date, content });
             
             renderAll();
-            
-            if (result && result.status === 'ok') {
-                alert('✅ Note saved!\n\n📧 Email confirmation sent.');
-            } else {
-                alert('✅ Saved locally!\n\n⚠️ Cloud sync failed.');
-            }
+            alert(result && result.status === 'ok' ? '✅ Saved! Email sent.' : '✅ Saved locally!');
         }
 
         function loadNote() {
             const date = document.getElementById('noteDate').value;
-            if (!date) { alert('Please select a date'); return; }
+            if (!date) { alert('Select a date'); return; }
             document.getElementById('noteContent').value = notes[date] || '';
             if (!notes[date]) alert('No note for this date');
         }
@@ -1042,9 +1262,9 @@
                 return;
             }
             
-            let html = '<h3 style="color: #1e3c72; margin-bottom: 15px;">📋 Recent Notes</h3>';
+            let html = '<h3 style="color: #1e3c72; margin-bottom: 12px; font-size: 14px;">📋 Recent Notes</h3>';
             dates.forEach(date => {
-                html += `<div class="daily-note" style="margin-bottom: 12px;"><div class="daily-note-header">${formatDateUK(date)}</div><div class="daily-note-content">${escapeHtml(notes[date])}</div></div>`;
+                html += `<div class="daily-note" style="margin-bottom: 10px;"><div class="daily-note-header">${formatDateUK(date)}</div><div class="daily-note-content">${escapeHtml(notes[date])}</div></div>`;
             });
             
             document.getElementById('savedNotes').innerHTML = html;
@@ -1055,18 +1275,12 @@
         // ============================================
         
         function exportData() {
-            const data = {
-                appointments,
-                notes,
-                exportDate: new Date().toISOString(),
-                email: 'sat060355@gmail.com'
-            };
-            
+            const data = { appointments, notes, exportDate: new Date().toISOString() };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `diary_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `diary_${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1085,41 +1299,37 @@
                 reader.onload = async function(evt) {
                     try {
                         const data = JSON.parse(evt.target.result);
-                        
-                        if (confirm('Replace all current data with imported data?')) {
+                        if (confirm('Replace all data?')) {
                             appointments = data.appointments || [];
                             notes = data.notes || {};
                             saveLocalData();
-                            
                             await apiRequest('importData', { appointments, notes });
-                            
                             renderAll();
-                            alert('✅ Data imported!');
+                            alert('✅ Imported!');
                         }
                     } catch (err) {
                         alert('❌ Error reading file');
                     }
                 };
-                
                 reader.readAsText(file);
             };
-            
             input.click();
         }
 
         async function clearAllData() {
-            if (!confirm('⚠️ DELETE ALL DATA?\n\nThis cannot be undone!')) return;
-            if (!confirm('Are you REALLY sure?\n\nAll appointments and notes will be permanently deleted.')) return;
+            if (!confirm('⚠️ DELETE ALL DATA?')) return;
+            if (!confirm('Really sure?')) return;
             
             appointments = [];
             notes = {};
             saveLocalData();
-            
             await apiRequest('importData', { appointments: [], notes: {} });
-            
             renderAll();
-            alert('✅ All data cleared');
+            alert('✅ Cleared');
         }
     </script>
 </body>
 </html>
+
+
+            
